@@ -1,6 +1,6 @@
-using BracketAlgebra
+using BracketAlgebras
 using Test
 
-@testset "BracketAlgebra.jl" begin
+@testset "BracketAlgebras.jl" begin
     # Write your tests here.
 end
