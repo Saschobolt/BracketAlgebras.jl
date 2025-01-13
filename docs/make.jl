@@ -1,14 +1,14 @@
-using BracketAlgebra
+using BracketAlgebras
 using Documenter
 
-DocMeta.setdocmeta!(BracketAlgebra, :DocTestSetup, :(using BracketAlgebra); recursive=true)
+DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras); recursive=true)
 
 makedocs(;
-    modules=[BracketAlgebra],
+    modules=[BracketAlgebras],
     authors="Sascha Stüttgen <sascha.stuettgen@rwth-aachen.de> and contributors",
-    sitename="BracketAlgebra.jl",
+    sitename="BracketAlgebras.jl",
     format=Documenter.HTML(;
-        canonical="https://Saschobolt.github.io/BracketAlgebra.jl",
+        canonical="https://Saschobolt.github.io/BracketAlgebras.jl",
         edit_link="master",
         assets=String[],
     ),
@@ -18,6 +18,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/Saschobolt/BracketAlgebra.jl",
+    repo="github.com/Saschobolt/BracketAlgebras.jl",
     devbranch="master",
 )

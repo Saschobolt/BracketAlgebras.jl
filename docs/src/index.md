@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = BracketAlgebra
+CurrentModule = BracketAlgebras
 ```
 
-# BracketAlgebra
+# BracketAlgebras
 
-Documentation for [BracketAlgebra](https://github.com/Saschobolt/BracketAlgebra.jl).
+Documentation for [BracketAlgebras](https://github.com/Saschobolt/BracketAlgebras.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [BracketAlgebra]
+Modules = [BracketAlgebras]
 ```
