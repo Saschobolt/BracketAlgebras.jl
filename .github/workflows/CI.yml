@@ -66,6 +66,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using BracketAlgebra
-          DocMeta.setdocmeta!(BracketAlgebra, :DocTestSetup, :(using BracketAlgebra); recursive=true)
-          doctest(BracketAlgebra)
+          using BracketAlgebras
+          DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras); recursive=true)
+          doctest(BracketAlgebras)
