@@ -19,18 +19,18 @@ function ==(a::BracketAlgebraElem, b::BracketAlgebraElem)
 end
 
 
-function Nemo.evaluate(b::BracketAlgebraElem{T}, A::Vector{T}) where {T<:Union{Nemo.RingElem,Number}}
-    Nemo.evaluate(b.polynomial, A)
+function evaluate(b::BracketAlgebraElem{T}, A::Vector{T}) where {T<:Union{RingElem,Number}}
+    evaluate(b.polynomial, A)
 end
 
-function Nemo.evaluate(b::BracketAlgebraElem{T}, A::Vector{U}) where {T<:Union{Nemo.RingElem,Number},U<:Integer}
-    Nemo.evaluate(b.polynomial, A)
+function evaluate(b::BracketAlgebraElem{T}, A::Vector{U}) where {T<:Union{RingElem,Number},U<:Integer}
+    evaluate(b.polynomial, A)
 end
 
-function Nemo.evaluate(b::BracketAlgebraElem{T}, coordinization::AbstractMatrix{<:Union{Nemo.RingElem,Number}}) where {T<:Union{Nemo.RingElem,Number}}
+function evaluate(b::BracketAlgebraElem{T}, coordinization::AbstractMatrix{<:Union{RingElem,Number}}) where {T<:Union{RingElem,Number}}
     bracks = brackets(b)
-    A = map(x -> x in bracks ? Nemo.det(T.(hcat(transpose(coordinization[:, x]), ones(parent(b).d + 1, 1)))) : 0, sort(collect(keys(parent(b).variables)), rev=true))
-    Nemo.evaluate(b.polynomial, A)
+    A = map(x -> x in bracks ? det(T.(hcat(transpose(coordinization[:, x]), ones(parent(b).d + 1, 1)))) : 0, sort(collect(keys(parent(b).variables)), rev=true))
+    evaluate(b.polynomial, A)
 end
 
 mutable struct Tabloid
@@ -80,9 +80,9 @@ function Tabloid(b::BracketAlgebraElem)
         error("Only tabloids of bracket monomials can be calculated.")
     end
 
-    exps = collect(Nemo.exponent_vectors(b))[1]
+    exps = collect(exponent_vectors(b))[1]
     # all brackets that appear as rows 
-    rows = [(repeat(parent(b).variables(Nemo.gens(parent(b).R)[i]), exps[i]) for i in eachindex(exps))...]
+    rows = [(repeat(parent(b).variables(gens(parent(b).R)[i]), exps[i]) for i in eachindex(exps))...]
     filter!(row -> length(row) > 0, rows)
     return Tabloid(rows, parent(b).literal_ordering)
 end
@@ -114,7 +114,7 @@ function straightening_sizyge(α::Vector{<:Integer}, β::Vector{<:Integer}, γ::
     @assert length(β) == d + 2 "β needs to have length d + 2, but got $(length(β))."
     @assert length(γ) == d + 1 - s "γ needs to have length d + 1 - s, but got $(length(γ))."
 
-    return sum(Nemo.sign(Nemo.Perm(vcat(setdiff(collect(1:d+2), τ), τ))) * B(vcat(α, β[setdiff(collect(1:d+2), τ)])) * B(vcat(β[τ], γ)) for τ in combinations(1:d+2, s))
+    return sum(sign(Perm(vcat(setdiff(collect(1:d+2), τ), τ))) * B(vcat(α, β[setdiff(collect(1:d+2), τ)])) * B(vcat(β[τ], γ)) for τ in combinations(1:d+2, s))
 end
 
 """
@@ -125,12 +125,12 @@ Perform the straightening algorithm to the BracketAlgebraElem b with monomial or
 For details see Sturmfels 2008, chapter 3.1, Handbook of Geometric Constraint System Principles, chapater 4.3
 """
 function straighten(b::BracketAlgebraElem)
-    first_nonstandard_ind = findfirst(mon -> !is_standard(mon), collect(Nemo.monomials(b)))
+    first_nonstandard_ind = findfirst(mon -> !is_standard(mon), collect(monomials(b)))
     if isnothing(first_nonstandard_ind)
         return b
     end
 
-    first_nonstandard = collect(Nemo.monomials(b))[first_nonstandard_ind]
+    first_nonstandard = collect(monomials(b))[first_nonstandard_ind]
     t = Tabloid(first_nonstandard)
     (r, s) = Tuple(standard_violation(t))
 
@@ -140,7 +140,7 @@ function straighten(b::BracketAlgebraElem)
     γ = mat[r+1, s+1:end]
 
     sizyge = straightening_sizyge(α, β, γ, parent(b))
-    return straighten(b - (Nemo.coeff(b, first_nonstandard_ind)) * prod(parent(b)(mat[i, :]) for i in setdiff(1:size(mat)[1], [r, r + 1]); init=one(parent(b))) * sizyge)
+    return straighten(b - (coeff(b, first_nonstandard_ind)) * prod(parent(b)(mat[i, :]) for i in setdiff(1:size(mat)[1], [r, r + 1]); init=one(parent(b))) * sizyge)
 end
 
 # function to find atomic extensors of BracketAlgebraElem as in Sturmfels 2008, Alg. 3.5.6 step 1
@@ -154,8 +154,8 @@ function atomic_extensors(b::BracketAlgebraElem)
 
     extensors = Vector{Int}[]
 
-    exps = Nemo.exponent_vectors(b)
-    coeffs = Nemo.coefficients(b)
+    exps = exponent_vectors(b)
+    coeffs = coefficients(b)
     function ~(p, q)
 
     end
