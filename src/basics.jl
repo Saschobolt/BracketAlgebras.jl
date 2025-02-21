@@ -1,37 +1,17 @@
-# aux function for the lexicographic order of vectors extended from literal_ordering
-# literal_ordering[1] < literal_ordering[2] < ...
+# aux function for the lexicographic order of vectors extended from point_ordering
+# point_ordering[1] < point_ordering[2] < ...
 # See Sturmfels 2008 p.81
-function _lt(literal_ordering::Vector{Int})
+function _lt(point_ordering::Vector{Int})
     function lt(a::Integer, b::Integer)
-        indexin(a, literal_ordering)[1] < indexin(b, literal_ordering)[1]
+        indexin(a, point_ordering)[1] < indexin(b, point_ordering)[1]
     end
     function lt(a::AbstractVector{<:Integer}, b::AbstractVector{<:Integer})
-        return indexin(sort(a, lt=lt), literal_ordering) < indexin(sort(b, lt=lt), literal_ordering)
+        return indexin(sort(a, lt=lt), point_ordering) < indexin(sort(b, lt=lt), point_ordering)
     end
     return lt
 end
 
-_lt(B::BracketAlgebra) = _lt(B.point_ordering)
-
-import Base.==
-function ==(a::BracketAlgebraElem, b::BracketAlgebraElem)
-    return (parent(a).n == parent(b).n) && (parent(a).d == parent(b).d) && (parent(a).literal_ordering == parent(b).literal_ordering) && straighten(a - b).polynomial == zero(parent(b).R)
-end
-
-
-function evaluate(b::BracketAlgebraElem{T}, A::Vector{T}) where {T<:Union{RingElem,Number}}
-    evaluate(b.polynomial, A)
-end
-
-function evaluate(b::BracketAlgebraElem{T}, A::Vector{U}) where {T<:Union{RingElem,Number},U<:Integer}
-    evaluate(b.polynomial, A)
-end
-
-function evaluate(b::BracketAlgebraElem{T}, coordinization::AbstractMatrix{<:Union{RingElem,Number}}) where {T<:Union{RingElem,Number}}
-    bracks = brackets(b)
-    A = map(x -> x in bracks ? det(T.(hcat(transpose(coordinization[:, x]), ones(parent(b).d + 1, 1)))) : 0, sort(collect(keys(parent(b).variables)), rev=true))
-    evaluate(b.polynomial, A)
-end
+_lt(B::BracketAlgebra) = _lt(point_ordering(B))
 
 mutable struct Tabloid
     matrix::Matrix{Int}
@@ -84,7 +64,7 @@ function Tabloid(b::BracketAlgebraElem)
     # all brackets that appear as rows 
     rows = [(repeat(parent(b).variables(gens(parent(b).R)[i]), exps[i]) for i in eachindex(exps))...]
     filter!(row -> length(row) > 0, rows)
-    return Tabloid(rows, parent(b).literal_ordering)
+    return Tabloid(rows, point_ordering(parent(b)))
 end
 
 """

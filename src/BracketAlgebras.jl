@@ -1,11 +1,6 @@
 module BracketAlgebras
 
-import AbstractAlgebra
-import AbstractAlgebra: parent_type, elem_type, base_ring, base_ring_type, parent, is_domain_type, is_exact_type, canonical_unit, isequal, divexact, zero!, mul!, add!, get_cached!, is_unit, characteristic,
-    Ring, RingElem, RingElement, MPolyRing, MPolyRingElem,
-    polynomial_ring, variable_names, evaluate, exponent_vectors, exponent_vector, gens, coeff, length, degrees, total_degree, coefficients, monomials, terms, monomial, term, leading_term, leading_monomial, leading_coefficient, factor,
-    Perm,
-    expressify, is_terse, pretty, terse, Lowercase
+using AbstractAlgebra
 # import Base: show, +, -, *, ^, ==, <, >, inv, isone, iszero, one, zero, rand, deepcopy_internal, hash
 using Bijections
 using Combinatorics
@@ -22,7 +17,7 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     point_ordering::Vector{Int} # ordering of the n points, that induces the tableaux order. point_ordering[1] < point_ordering[2] < ... < point_ordering[n]. See Sturmfels 2008 p.81
     variables::Bijection{Vector{Int},<:MPolyRingElem{T}}
 
-    function BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int)
+    function BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=BigInt)
         if sort(point_ordering) != collect(1:n)
             error("ordering needs to order the points 1:$n, but got $point_ordering")
         end
