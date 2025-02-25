@@ -32,8 +32,6 @@ function hash(b::BracketAlgebraElem, h::UInt)
     return xor(r, hash(b.polynomial, h))
 end
 
-residue_ring()
-
 ############################################################################################################
 # Constructors for bracket algebra elements
 ############################################################################################################
