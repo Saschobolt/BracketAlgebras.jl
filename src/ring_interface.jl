@@ -5,7 +5,7 @@ import AbstractAlgebra: parent_type, elem_type, base_ring, base_ring_type, paren
     Ring, RingElem, RingElement, MPolyRing, MPolyRingElem,
     degrees, total_degree, coefficients, monomials, terms, exponent_vectors, coeff, monomial, exponent_vector, term, leading_term, leading_monomial, leading_coefficient, factor, evaulate
 
-import Base: rand, zero, length, iszero, isone, promote_rule, deepcopy, *, +, -, ^, >, <, ==, hash, deepcopy_internal
+import Base: rand, one, zero, length, iszero, isone, promote_rule, deepcopy, *, +, -, ^, >, <, ==, hash, deepcopy_internal
 ############################################################################################################
 # Data type and parent object methods
 ############################################################################################################
@@ -196,5 +196,5 @@ end
 # Random generation
 ############################################################################################################
 
-
+# TODO
 
