@@ -15,6 +15,22 @@ abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
 export AbstractBracketAlgebra, BracketAlgebra, sizyges, Tabloid, is_standard, bracket_monomial, reduced_groebner_basis!, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!
 
+
+# aux function for the lexicographic order of vectors extended from point_ordering
+# point_ordering[1] < point_ordering[2] < ...
+# See Sturmfels 2008 p.81
+function _lt(point_ordering::Vector{Int})
+    function lt(a::Integer, b::Integer)
+        indexin(a, point_ordering)[1] < indexin(b, point_ordering)[1]
+    end
+    function lt(a::AbstractVector{<:Integer}, b::AbstractVector{<:Integer})
+        return indexin(sort(a, lt=lt), point_ordering) < indexin(sort(b, lt=lt), point_ordering)
+    end
+    return lt
+end
+
+_lt(B::BracketAlgebra) = _lt(point_ordering(B))
+
 """
     BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
 
