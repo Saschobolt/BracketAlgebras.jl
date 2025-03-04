@@ -47,8 +47,17 @@ end
 
 (B::BracketAlgebra{T})(n::T) where {T<:RingElem} = BracketAlgebraElem(B, B.R(n))
 
-# Bracket expression from array: B([1,2,3,4]) = [1,2,3,4]
+# Bracket expression from array of point indices: B([1,2,3,4]) = [1,2,3,4]
 (B::BracketAlgebra)(bracket::Vector{<:Integer}) = length(unique(bracket)) == length(bracket) ? sign(Perm(Int.(indexin(bracket, sort(bracket, lt=_lt(B))))))BracketAlgebraElem(B, B.variables[sort(bracket, lt=_lt(B))]) : zero(B)
+
+# Constructor for bracket algebra elements by point labels. E.g. B = BracketAlgebra(4,2, point_labels = ["a", "b", "c", "d"]) => B(["b", "a","c"]) == B([2,1,3]) == -["a", "b", "c"]
+function (B::BracketAlgebra)(bracket::AbstractVector)
+    if !issubset(bracket, point_labels(B))
+        error("`bracket` ($bracket) doesn't match point labels of bracket algebra.")
+    end
+
+    return B(Vector{Int}(indexin(bracket, point_labels(B))))
+end
 
 # Bracket polynomial from array of array of arrays. They encode the bracket polynomial as a sum of monomials. B([[[1,2], [3,4]], [2,3]]) = [1,2]*[3,4] + [2,3]
 (B::BracketAlgebra)(A::Vector{<:Vector{<:Vector{<:Integer}}}) = sum(prod(B(bracket) for bracket in monomial) for monomial in A)
