@@ -8,12 +8,7 @@ using Combinatorics
 abstract type AbstractBracketAlgebra{T} <: Ring end
 abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
-export AbstractBracketAlgebra, BracketAlgebra, sizyges, Tabloid, is_standard, bracket_monomial, reduced_groebner_basis!, AbstractBracketAlgebraElem, BracketAlgebraElem, point_ordering!, straighten
-
-abstract type AbstractBracketAlgebra{T} <: Ring end
-abstract type AbstractBracketAlgebraElem{T} <: RingElem end
-
-export AbstractBracketAlgebra, BracketAlgebra, sizyges, Tabloid, is_standard, bracket_monomial, reduced_groebner_basis!, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!
+export AbstractBracketAlgebra, BracketAlgebra, d, n, sizyges, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!
 
 
 # aux function for the lexicographic order of vectors extended from point_ordering
@@ -28,8 +23,6 @@ function _lt(point_ordering::Vector{Int})
     end
     return lt
 end
-
-_lt(B::BracketAlgebra) = _lt(point_ordering(B))
 
 """
     BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
@@ -48,15 +41,15 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     d::Int # dimension of the underlying projective space $\mathbb{P}^d$
     n::Int # number of points considered
     R::MPolyRing{T}
-    point_ordering::Vector{Int} # ordering of the n points, that induces the tableaux order. point_ordering[1] < point_ordering[2] < ... < point_ordering[n]. See Sturmfels 2008 p.81
+    point_ordering::Vector{Int} # ordering of the n pointsjulia, that induces the tableaux order. point_ordering[1] < point_ordering[2] < ... < point_ordering[n]. See Sturmfels 2008 p.81
     variables::Bijection{Vector{Int},<:MPolyRingElem{T}}
-    point_labels::Vector  # New: point labels for each point
+    point_labels::Vector  # point labels for each point
 
 
     """
-        BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::Vector=collect(1:n))
+        BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::AbstractVector=collect(1:n))
 
-    Construct a bracket algebra over the projective space P^d on n points with the given point ordering and point labels.
+    Construct a bracket algebra over the projective space P^d on n points with the given point ordering and point labels. If point_labels is a vector of integers, it is expected to be equal to `collect(1:n)`.
 
     # Examples
     ```jldoctest
@@ -69,12 +62,16 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     Bracket algebra over P^2 on 4 points with point ordering b < a < c < d.
     ```
     """
-    function BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::Vector=collect(1:n))
+    function BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::AbstractVector=collect(1:n))
         if sort(point_ordering) != collect(1:n)
             error("ordering needs to order the points 1:$n, but got $point_ordering")
         end
         if length(point_labels) != n
             error("point_labels must be of length $n")
+        end
+        # Add check for point_labels when it's a Vector of Integers
+        if eltype(point_labels) <: Integer && point_labels != collect(1:n)
+            error("When point_labels is a Vector of Integers, it must equal collect(1:n)")
         end
 
         S = parent_type(T)
@@ -97,14 +94,44 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     end
 end
 
-# New accessor for point_labels.
+
+"""
+    point_labels(B::BracketAlgebra)
+
+Return the point labels of the bracket algebra `B`.
+"""
 point_labels(B::BracketAlgebra) = B.point_labels
 
-# New modifier for point_labels.
+"""
+    point_labels!(B::BracketAlgebra, new_labels::AbstractVector)
+
+Update the point labels of the bracket algebra `B` and return the resulting bracket algebra. If `new_labels` is a vector of integers, it is expected to be equal to `collect(1:n(B))`.
+
+# Examples
+```jldoctest
+julia> point_labels!(BracketAlgebra(6,3), ["a", "b", "c", "d", "e", "f"])
+Bracket algebra over P^3 on 6 points with point ordering a < b < c < d < e < f.
+```
+
+```jldoctest
+point_labels!(BracketAlgebra(6,3), [2,1,3,4,5,"a"])
+Bracket algebra over P^3 on 6 points with point ordering 2 < 1 < 3 < 4 < 5 < a.
+```
+
+```jldoctest
+julia> point_labels!(BracketAlgebra(6,3), [2,1,3,4,5,6])
+ERROR: When point_labels is a Vector of Integers, it must equal collect(1:n)
+```
+"""
 function point_labels!(B::BracketAlgebra, new_labels::AbstractVector)
     if length(new_labels) != B.n
         error("new_labels must be of length $(B.n)")
     end
+
+    if eltype(new_labels) <: Integer && new_labels != collect(1:n(B))
+        error("When point_labels is a Vector of Integers, it must equal collect(1:n)")
+    end
+
     B.point_labels = new_labels
     return B
 end
@@ -112,24 +139,59 @@ end
 """
     d(B::BracketAlgebra)
 
-Return the dimension of the projective space \$\\mathbb{P}^d\$ underlying the bracket algebra B.
+Return the dimension of the projective space P^`d` underlying the bracket algebra `B`.
+
+# Examples
+```jldoctest
+julia> d(BracketAlgebra(6,3))
+3
+```
 """
 d(B::BracketAlgebra) = B.d
 
 """
     n(B::BracketAlgebra)
 
-Return the number of points considered in the bracket algebra B.
+Return the number of points considered in the bracket algebra `B`.
+```jldoctest
+julia> n(BracketAlgebra(6,3))
+6
+```
 """
 n(B::BracketAlgebra) = B.n
 
 """
     point_ordering(B::BracketAlgebra)
 
-Return the ordering of the n points in the bracket algebra B, that induces the tableaux order.
+Return the ordering of the n points in the bracket algebra `B`, that induces the tableaux order.
+
+# Examples
+```jldoctest
+julia> point_ordering(BracketAlgebra(6,3,[2,1,3,4,5,6]))
+6-element Vector{Int64}:
+ 2
+ 1
+ 3
+ 4
+ 5
+ 6
+```
 """
 point_ordering(B::BracketAlgebra) = B.point_ordering
 
+"""
+    point_ordering!(B::BracketAlgebra, point_ordering::AbstractVector{<:Integer}=collect(1:B.n))
+
+Update the point ordering of the bracket algebra `B` to `point_ordering` and return the updated bracket algebra.
+
+Warning: changing the point ordering will not change the representation of already generated elements of `B`, which leads to wrong results when working with these elements. It is recommended to create a new bracket algebra with the desired point ordering instead. 
+
+# Examples
+```jldoctest
+julia> point_ordering!(BracketAlgebra(6,3), [6,5,4,3,2,1])
+Bracket algebra over P^3 on 6 points with point ordering 6 < 5 < 4 < 3 < 2 < 1.
+```
+"""
 function point_ordering!(B::BracketAlgebra, point_ordering::AbstractVector{<:Integer}=collect(1:B.n))
     B.point_ordering = point_ordering
     brackets = sort(sort.(collect(combinations(1:n(B), d(B) + 1)), lt=_lt(point_ordering)), lt=_lt(point_ordering))
@@ -145,6 +207,9 @@ function point_ordering!(B::BracketAlgebra, point_ordering::AbstractVector{<:Int
     return B
 end
 
+# aux function that returns the less than function from the point_ordering(B)
+_lt(B::BracketAlgebra) = _lt(point_ordering(B))
+
 function Base.show(io::IO, B::BracketAlgebra)
     ordering_str = string(point_labels(B)[point_ordering(B)[1]]) * ""
     for i in 2:n(B)
@@ -153,6 +218,15 @@ function Base.show(io::IO, B::BracketAlgebra)
     print(io, "Bracket algebra over P^$(d(B)) on $(n(B)) points with point ordering $(ordering_str).")
 end
 
+"""
+    BracketAlgebraElem{T<:Union{RingElem,Number}} <: AbstractBracketAlgebraElem{T}
+
+Element type for @BracketAlgebra with coefficients of type `T`.
+    
+# Fields
+-`parent::BracketAlgebra{T}`: parent object of the bracket algebra element.
+-`polynomial::MPolyRingElem{T}`: polynomial in `parent.R` that represents the element.
+"""
 mutable struct BracketAlgebraElem{T<:Union{RingElem,Number}} <: AbstractBracketAlgebraElem{T}
     parent::BracketAlgebra{T}
     polynomial::MPolyRingElem{T}
@@ -207,6 +281,6 @@ function Base.show(io::IO, b::BracketAlgebraElem)
 end
 
 include("ring_interface.jl")
-include("basics.jl")
+include("straightening.jl")
 
 end
