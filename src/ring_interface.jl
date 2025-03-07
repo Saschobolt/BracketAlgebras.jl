@@ -147,7 +147,7 @@ coeff(b::BracketAlgebraElem, exps::Vector{Int}) = coeff(b.polynomial, exps)
 
 monomial(b::BracketAlgebraElem, n::Int) = parent(b)(monomial(b.polynomial, n))
 
-exponent_vector(b::BracketAlgebra, n::Int) = exponent_vector(b.polynomial, n)
+exponent_vector(b::BracketAlgebraElem, n::Int) = exponent_vector(b.polynomial, n)
 
 term(b::BracketAlgebraElem, n::Int) = parent(b)(term(b.polynomial, n))
 
