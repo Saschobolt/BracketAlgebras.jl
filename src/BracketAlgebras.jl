@@ -8,7 +8,7 @@ using Combinatorics
 abstract type AbstractBracketAlgebra{T} <: Ring end
 abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
-export AbstractBracketAlgebra, BracketAlgebra, d, n, sizyges, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!
+export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors
 
 
 # aux function for the lexicographic order of vectors extended from point_ordering
@@ -93,6 +93,33 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
         return new{elem_type(S)}(d, n, R, point_ordering, variables, point_labels)
     end
 end
+
+import AbstractAlgebra.gens
+"""
+    gens(B::BracketAlgebra)
+
+Return the generators of the bracket algebra `B` as elements of `B`. The list is sorted decreasing wrt the tableaux order and is thus consistent with the ordering of the variables in the polynomial ring `B.R`.
+
+# Examples
+```jldoctest
+julia> gens(BracketAlgebra(4,2,[1,2,3,4]))
+4-element Vector{BracketAlgebras.BracketAlgebraElem{Int64}}:
+ [2, 3, 4]
+ [1, 3, 4]
+ [1, 2, 4]
+ [1, 2, 3]
+```
+
+```jldoctest
+julia> gens(BracketAlgebra(4,2,[2,1,3,4]))
+4-element Vector{BracketAlgebras.BracketAlgebraElem{Int64}}:
+ [1, 3, 4]
+ [2, 3, 4]
+ [2, 1, 4]
+ [2, 1, 3]
+```
+"""
+gens(B::BracketAlgebra) = [B(B.variables(x)) for x in gens(B.R)]
 
 
 """
