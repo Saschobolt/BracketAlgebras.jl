@@ -1,3 +1,12 @@
+"""
+    Tabloid
+
+A tabloid with ordered rows. 
+
+# Fields
+-`matrix::Matrix{Int}`: Matrix representation of the tabloid.
+-`ordering::Vector{Int}`: Ordering of the entries of the tabloids. `ordering[1]` < `ordering[2]` < ...
+"""
 mutable struct Tabloid
     matrix::Matrix{Int}
     ordering::Vector{Int}
@@ -5,10 +14,18 @@ mutable struct Tabloid
     """
     Tabloid(matrix::AbstractMatrix{<:Integer}, ordering::AbstractVector{<:Integer}=collect(1:maximum(matrix)))
 
-    Calculate the tabloid whose rows correspond to the rows of matrix with the ordering.
-        Example:
-        matrix = [4 2 1; 3 1 4], ordering = [3,1,2,4]
-        => result: [3 1 4; 1 2 4] 
+    Return the tabloid whose rows correspond to the rows of matrix with the given ordering. The entries of the rows are sorted wrt the ordering and then the rows are ordered lexicographically (tableaux order).
+
+    # Examples
+    ```jldoctest
+    julia> Tabloid([4 2 1; 3 1 4], [3,1,2,4])
+    [3 1 4; 1 2 4]
+    ```
+
+    ```jldoctest
+    julia> Tabloid([4 2 1; 3 1 4], [3,2,4,1])
+    [3 4 1; 2 4 1]
+    ```
     """
     function Tabloid(matrix::AbstractMatrix{<:Integer}, ordering::AbstractVector{<:Integer}=collect(1:maximum(matrix)))
         rows = [matrix[i, :] for i in 1:size(matrix)[1]]
@@ -30,14 +47,21 @@ Base.vcat(t1::Tabloid, t2::Tabloid) = t1.ordering == t2.ordering ? Tabloid(t1.or
 
 
 """
-    tabloid(b::BracketAlgebraElem, ordering::Vector{Int}=collect(1:parent(b).n))
+    Tabloid(b::BracketAlgebraElem)
 
-Return the tabloid corresponding to the bracket monomial b ordered by ordering. 
-ordering determines the order in which 
+Return the tabloid corresponding to the bracket monomial `b`.
 
-Example:
-b = [1,2,3][3,4,5], ordering = [4,3,1,2,5]
-result: [4 3 5; 3 1 2]
+# Examples
+```jldoctest
+julia> B = BracketAlgebra(5,2)
+Bracket algebra over P^2 on 5 points with point ordering 1 < 2 < 3 < 4 < 5.
+
+julia> b = B([1,2,3]) * B([1,2,5])
+[1, 2, 5][1, 2, 3]
+
+julia> Tabloid(b)
+[1 2 3; 1 2 5]
+```
 """
 function Tabloid(b::BracketAlgebraElem)
     # see Sturmfels 2008, page 81 on how to build the tabloids
@@ -47,18 +71,30 @@ function Tabloid(b::BracketAlgebraElem)
 
     exps = collect(exponent_vectors(b))[1]
     # all brackets that appear as rows 
-    rows = [(repeat(parent(b).variables(gens(parent(b).R)[i]), exps[i]) for i in eachindex(exps))...]
-    filter!(row -> length(row) > 0, rows)
+    rows = Vector{Int}[]
+    for (i, e) in enumerate(exps)
+        for k in 1:e
+            push!(rows, parent(b).variables(gens(parent(b).R)[i]))
+        end
+    end
     return Tabloid(rows, point_ordering(parent(b)))
 end
 
 """
     standard_violation(t::Tabloid)
 
-Return the index of the first violation to the standardness of t, i.e. the first index where t[i,j] > t[i+1, j] with regard to the ordering. Otherwise return nothing.
-Example:
-t = [1 2 3; 1 4 5; 1 5 6; 2 3 4] with ordering [1,2,3,4,5,6] => return (3,2)
-t = [1 2 3; 1 2 4] with ordering [1,2,3,4] => return nothing
+Return the index of the first violation to the standardness of the tabloid `t`, i.e. the first index where `t[i,j]` > `t[i+1, j]` with regard to the ordering. Otherwise return `nothing`.
+
+# Examples: 
+```jldoctest
+julia> standard_violation(Tabloid([1 2 3; 1 4 5; 1 5 6; 2 3 4], [1,2,3,4,5,6]))
+CartesianIndex(3, 2)
+```
+
+```jldoctest
+julia> standard_violation(Tabloid([1 2 3; 1 2 4], [1,2,3,4]))
+
+```
 """
 function standard_violation(t::Tabloid)
     if size(t.matrix)[1] == 1
@@ -68,26 +104,82 @@ function standard_violation(t::Tabloid)
     return findfirst([_lt(t.ordering)(t.matrix[row+1, col], t.matrix[row, col]) for row in 1:size(t.matrix)[1]-1, col in 1:size(t.matrix)[2]])
 end
 
-standard_violation(b::BracketAlgebraElem, ordering::Vector{<:Integer}=collect(1:parent(b).n)) = standard_violation(Tabloid(b, ordering))
+"""
+    standard_violation(b::BracketAlgebraElem)
 
+Return the index of the first standard violation of the tabloid corresponding to `b`.
+"""
+standard_violation(b::BracketAlgebraElem) = standard_violation(Tabloid(b))
+
+"""
+    is_standard(t::Tabloid)
+
+Return whether the tabloid `t` is standard. See also @standard_violation.
+"""
 is_standard(t::Tabloid) = isnothing(standard_violation(t))
+
+"""
+    is_standard(b::BracketAlgebraElem)
+
+Return whether the tabloid correspondong to the bracket algebra element `b` is standard. See also @standard_violation.
+"""
 is_standard(b::BracketAlgebraElem) = is_standard(Tabloid(b))
 
+
+"""
+    straightening_sizyge(α::Vector{<:Integer}, β::Vector{<:Integer}, γ::Vector{<:Integer}, B::BracketAlgebra)
+
+Return the straightening_sizyge corresponding to `α`, `β`, `γ` as an element of the bracket algebra `B`.
+The lenghts of the vectors have to fulfill `length(β)==d(B)+2` and `length(γ)==d(B)-length(α)`
+
+# Examples
+```jldoctest
+julia> B = BracketAlgebra(6,2)
+Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6.
+
+julia> α = [1]
+1-element Vector{Int64}:
+ 1
+
+julia> β = [5,6,2,3]
+4-element Vector{Int64}:
+ 5
+ 6
+ 2
+ 3
+
+julia> γ = [4]
+1-element Vector{Int64}:
+ 4
+
+julia> straightening_sizyge(α, β, γ, B)
+[2, 3, 4][1, 5, 6] + [2, 4, 5][1, 3, 6] - [2, 4, 6][1, 3, 5] - [3, 4, 5][1, 2, 6] + [3, 4, 6][1, 2, 5] + [4, 5, 6][1, 2, 3]
+```
+"""
 function straightening_sizyge(α::Vector{<:Integer}, β::Vector{<:Integer}, γ::Vector{<:Integer}, B::BracketAlgebra)
     s = length(α) + 1
-    d = B.d
-    @assert length(β) == d + 2 "β needs to have length d + 2, but got $(length(β))."
-    @assert length(γ) == d + 1 - s "γ needs to have length d + 1 - s, but got $(length(γ))."
+    @assert length(β) == d(B) + 2 "β needs to have length d + 2 ($(d(B) + 2)), but got $(length(β))."
+    @assert length(γ) == d(B) + 1 - s "γ needs to have length d - length(α) ($(d(B) - length(α))), but got $(length(γ))."
 
-    return sum(sign(Perm(vcat(setdiff(collect(1:d+2), τ), τ))) * B(vcat(α, β[setdiff(collect(1:d+2), τ)])) * B(vcat(β[τ], γ)) for τ in combinations(1:d+2, s))
+    return sum(sign(Perm(vcat(setdiff(collect(1:d(B)+2), τ), τ))) * B(vcat(α, β[setdiff(collect(1:d(B)+2), τ)])) * B(vcat(β[τ], γ)) for τ in combinations(1:d(B)+2, s))
 end
 
 """
-    straighten(b::BracketAlgebraElem, ordering::AbstractVector{<:Integer} = collect(1:parent(b).n); chek::Bool = true)
+    straighten(b::BracketAlgebraElem)
 
-Perform the straightening algorithm to the BracketAlgebraElem b with monomial ordering induced by ordering[1] < ordering[2] < ...
+Perform the straightening algorithm on the bracket algebra element `b` as in Stutrmfels 2008, Alg. 3.5.6. The straightening algorithm performs the groebner reduction of the bracket algebra element `b` with the straightening sizyges as a Groebner basis. The result is a normal form of `b` in which every term is standard. See also @straightening_sizyge, @standard_violation, @is_standard.
 
-For details see Sturmfels 2008, chapter 3.1, Handbook of Geometric Constraint System Principles, chapater 4.3
+# Examples
+```jldoctest
+julia> B = BracketAlgebra(6, 2)
+Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6.
+
+julia> b = B([1,4,5])*B([1,5,6])*B([2,3,4])
+[2, 3, 4][1, 5, 6][1, 4, 5]
+
+julia> straighten(b)
+[2, 5, 6][1, 4, 5][1, 3, 4] - [3, 5, 6][1, 4, 5][1, 2, 4] + [4, 5, 6][1, 4, 5][1, 2, 3]
+```
 """
 function straighten(b::BracketAlgebraElem)
     first_nonstandard_ind = findfirst(mon -> !is_standard(mon), collect(monomials(b)))
@@ -112,16 +204,44 @@ end
 """
     atomic_extensors(b::BracketAlgebraElem)
 
-Find all atomic extensors of the bracket algebra elem b. These are the equivalence classes of the relation p1 ~ p2 iff substituting p1 = p2 in b results in the zero element of the bracket algebra.
+Find all atomic extensors of the bracket algebra elem `b`. These are the equivalence classes of the relation p1 ~ p2 iff substituting p1 = p2 in `b` results in the zero element of the parent bracket algebra.
+
+# Examples
+```jldoctest
+
 """
 function atomic_extensors(b::BracketAlgebraElem)
     B = parent(b)
 
-    extensors = Vector{Int}[]
+    literals = union(brackets(b)...) # all literals that appear in the bracket expression. Every other literal of B is in its own extensor class, as setting them equal doesn't change the expression.
+
+    extensors = Vector{Int}[[literals[1]]]
 
     exps = exponent_vectors(b)
     coeffs = coefficients(b)
     function ~(p, q)
-
+        return sum(c * prod(B(replace(B.variables(gens(B.R)[j]), q => p))^e for (j, e) in enumerate(exponent_vector(b, i))) for (i, c) in enumerate(coeffs)) == zero(B)
     end
+
+    # extensors are the equivalence classes of the relation ~. As it is an equivalence relation one only needs to check whether a literal i is equivalent to the first element of every class.
+    # The classes also partition the set of literals. Thus, if i is in relation with another literal it doesn't have to be checked against the rest.
+    for i in literals[2:end]
+        new_class = true # flag that says whether i has to be put into a new equivalence class
+
+        for class in extensors
+            if ~(i, class[1])
+                push!(class, i)
+                new_class = false
+                break
+            end
+        end
+
+        if new_class
+            push!(extensors, [i])
+        end
+    end
+
+    append!(extensors, [[j] for j in setdiff(1:(n(B)), literals)]) # all other literals of B are in their own class.
+
+    return extensors
 end
