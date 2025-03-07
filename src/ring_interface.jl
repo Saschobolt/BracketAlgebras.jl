@@ -176,8 +176,10 @@ function evaluate(b::BracketAlgebraElem{T}, coordinization::AbstractMatrix{<:Uni
     evaluate(b.polynomial, A)
 end
 
+is_multilinear(b::BracketAlgebraElem) = maximum(maximum, exponent_vectors(b)) <= 1
+
 ############################################################################################################
-# Arithmetics and comparisons (no ==, this is provided in straightening.jl)
+# Arithmetics and comparisons
 ############################################################################################################
 Base.:*(n::Integer, b::BracketAlgebraElem) = BracketAlgebraElem(b.parent, n * b.polynomial)
 

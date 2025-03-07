@@ -8,7 +8,7 @@ using Combinatorics
 abstract type AbstractBracketAlgebra{T} <: Ring end
 abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
-export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors
+export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors, is_multilinear
 
 
 # aux function for the lexicographic order of vectors extended from point_ordering
