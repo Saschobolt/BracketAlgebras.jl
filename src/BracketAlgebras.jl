@@ -8,6 +8,8 @@ using Combinatorics
 abstract type AbstractBracketAlgebra{T} <: Ring end
 abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
+import AbstractAlgebra.gens
+
 export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors
 
 
@@ -94,7 +96,6 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     end
 end
 
-import AbstractAlgebra.gens
 """
     gens(B::BracketAlgebra)
 
@@ -141,7 +142,7 @@ Bracket algebra over P^3 on 6 points with point ordering a < b < c < d < e < f.
 ```
 
 ```jldoctest
-point_labels!(BracketAlgebra(6,3), [2,1,3,4,5,"a"])
+julia> point_labels!(BracketAlgebra(6,3), [2,1,3,4,5,"a"])
 Bracket algebra over P^3 on 6 points with point ordering 2 < 1 < 3 < 4 < 5 < a.
 ```
 
