@@ -41,7 +41,7 @@ end
 
 (B::BracketAlgebra{T})(a::T) where {T<:RingElement} = BracketAlgebraElem(B, B.R(a))
 
-(B::BracketAlgebra{T})(A::Vector{T}, m::Vector{<:Vector{<:Integer}}) where {T<:RingElement} = BracketAlgebraElem(B, B.R(A, m))
+(B::BracketAlgebra{T})(A::Vector, m::Vector{<:Vector{<:Integer}}) where {T<:RingElement} = BracketAlgebraElem(B, B.R(T.(A), m))
 
 (B::BracketAlgebra)(p::MPolyRingElem) = BracketAlgebraElem(B, p)
 
