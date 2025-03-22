@@ -3,7 +3,7 @@
 ############################################################################################################
 import AbstractAlgebra: parent_type, elem_type, base_ring, base_ring_type, parent, is_domain_type, is_exact_type, canonical_unit, isequal, divexact, zero!, mul!, add!, get_cached!, is_unit, characteristic,
     Ring, RingElem, RingElement, MPolyRing, MPolyRingElem,
-    degrees, total_degree, coefficients, monomials, terms, exponent_vectors, coeff, monomial, exponent_vector, term, leading_term, leading_monomial, leading_coefficient, factor, evaulate
+    degrees, total_degree, coefficients, monomials, terms, exponent_vectors, coeff, monomial, exponent_vector, term, leading_term, leading_monomial, leading_coefficient, factor, evaluate
 
 import Base: rand, one, zero, length, iszero, isone, promote_rule, deepcopy, *, +, -, ^, >, <, ==, hash, deepcopy_internal
 ############################################################################################################
@@ -170,10 +170,14 @@ function evaluate(b::BracketAlgebraElem{T}, A::Vector{U}) where {T<:Union{RingEl
     evaluate(b.polynomial, A)
 end
 
+# evaluate bracket algebra expression b at a coordinization. The coordinization has the homogeneous coordinates of the points as columns and thus size (d,n)
 function evaluate(b::BracketAlgebraElem{T}, coordinization::AbstractMatrix{<:Union{RingElem,Number}}) where {T<:Union{RingElem,Number}}
+    if size(coordinization) != (d(parent(b)), n(parent(b)))
+        error("Expected coordinization of size $((d(parent(b)), n(parent(b)))), but got $(size(coordinization))")
+    end
     bracks = brackets(b)
-    A = map(x -> x in bracks ? det(T.(hcat(transpose(coordinization[:, x]), ones(parent(b).d + 1, 1)))) : 0, sort(collect(keys(parent(b).variables)), rev=true))
-    evaluate(b.polynomial, A)
+    A = map(x -> x in bracks ? det(hcat(transpose(coordinization[:, x]), ones(parent(b).d + 1, 1))) : 0, sort(collect(keys(parent(b).variables)), rev=true))
+    return sum(c * prod(A[j]^e for (j, e) in enumerate(exponent_vector(b, i))) for (i, c) in enumerate(coefficients(b)))
 end
 
 is_multilinear(b::BracketAlgebraElem) = maximum(maximum, exponent_vectors(b)) <= 1
