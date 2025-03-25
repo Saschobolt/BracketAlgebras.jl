@@ -1,7 +1,8 @@
 using BracketAlgebras
+using AbstractAlgebra
 using Documenter
 
-DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras); recursive=true)
+DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras, AbstractAlgebra); recursive=true)
 
 makedocs(;
     modules=[BracketAlgebras],
@@ -13,7 +14,8 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home" => "index.md",
+        "Introduction" => "index.md",
+        "The Bracket Algebra" => "bracket_algebra.md",
     ],
 )
 

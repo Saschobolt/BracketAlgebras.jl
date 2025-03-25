@@ -54,7 +54,7 @@ Return the tabloid corresponding to the bracket monomial `b`.
 # Examples
 ```jldoctest
 julia> B = BracketAlgebra(5,2)
-Bracket algebra over P^2 on 5 points with point ordering 1 < 2 < 3 < 4 < 5.
+Bracket algebra over P^2 on 5 points with point ordering 1 < 2 < 3 < 4 < 5 and coefficient ring Integers.
 
 julia> b = B([1,2,3]) * B([1,2,5])
 [1, 2, 5][1, 2, 3]
@@ -103,7 +103,7 @@ function standard_violation(t::Tabloid)
 
     return findfirst([_lt(t.ordering)(t.matrix[row+1, col], t.matrix[row, col]) for row in 1:size(t.matrix)[1]-1, col in 1:size(t.matrix)[2]])
 end
-
+Vector
 """
     standard_violation(b::BracketAlgebraElem)
 
@@ -114,14 +114,14 @@ standard_violation(b::BracketAlgebraElem) = standard_violation(Tabloid(b))
 """
     is_standard(t::Tabloid)
 
-Return whether the tabloid `t` is standard. See also @standard_violation.
+Return whether the tabloid `t` is standard. See also [`standard_violation`](@ref).
 """
 is_standard(t::Tabloid) = isnothing(standard_violation(t))
 
 """
     is_standard(b::BracketAlgebraElem)
 
-Return whether the tabloid correspondong to the bracket algebra element `b` is standard. See also @standard_violation.
+Return whether the tabloid correspondong to the bracket algebra element `b` is standard. See also [`standard_violation`](@ref).
 """
 is_standard(b::BracketAlgebraElem) = is_standard(Tabloid(b))
 
@@ -135,7 +135,7 @@ The lenghts of the vectors have to fulfill `length(β)==d(B)+2` and `length(γ)=
 # Examples
 ```jldoctest
 julia> B = BracketAlgebra(6,2)
-Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6.
+Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6 and coefficient ring Integers.
 
 julia> α = [1]
 1-element Vector{Int64}:
@@ -167,12 +167,12 @@ end
 """
     straighten(b::BracketAlgebraElem)
 
-Perform the straightening algorithm on the bracket algebra element `b` as in Stutrmfels 2008, Alg. 3.5.6. The straightening algorithm performs the groebner reduction of the bracket algebra element `b` with the straightening sizyges as a Groebner basis. The result is a normal form of `b` in which every term is standard. See also @straightening_sizyge, @standard_violation, @is_standard.
+Perform the straightening algorithm on the bracket algebra element `b` as in Stutrmfels 2008, Alg. 3.5.6. The straightening algorithm performs the groebner reduction of the bracket algebra element `b` with the straightening sizyges as a Groebner basis. The result is a normal form of `b` in which every term is standard. See also [`straightening_sizyge`](@ref), [`standard_violation`](@ref), [`is_standard`](@ref).
 
 # Examples
 ```jldoctest
 julia> B = BracketAlgebra(6, 2)
-Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6.
+Bracket algebra over P^2 on 6 points with point ordering 1 < 2 < 3 < 4 < 5 < 6 and coefficient ring Integers.
 
 julia> b = B([1,4,5])*B([1,5,6])*B([2,3,4])
 [2, 3, 4][1, 5, 6][1, 4, 5]

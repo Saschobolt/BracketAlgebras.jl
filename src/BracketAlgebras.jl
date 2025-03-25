@@ -10,7 +10,7 @@ abstract type AbstractBracketAlgebraElem{T} <: RingElem end
 
 import AbstractAlgebra.gens
 
-export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebrasElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors, is_multilinear
+export AbstractBracketAlgebra, BracketAlgebra, d, n, Tabloid, is_standard, bracket_monomial, AbstractBracketAlgebraElem, BracketAlgebraElem, point_ordering, point_ordering!, point_labels, point_labels!, standard_violation, straightening_sizyge, straighten, atomic_extensors, is_multilinear
 
 
 # aux function for the lexicographic order of vectors extended from point_ordering
@@ -27,18 +27,18 @@ function _lt(point_ordering::Vector{Int})
 end
 
 """
-    BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
-
-Bracket algebra with coefficients of type `T`.
-
-# Fields
-- `d::Int`: dimension of the underlying projective space P^`d`
-- `n::Int`: number of points considered
-- `R::MPolyRing{T}`: AbstractAlgebra multivariate polynomial ring representing the elements of the bracket algebra (for internal use)
-- `point_ordering::Vector{Int}`: ordering of the `n` point indices, that induces the tableaux order. `point_ordering[1] < point_ordering[2] < ... < point_ordering[n]`. 
-- `variables::Bijection{Vector{Int},<:MPolyRingElem{T}}`: bijection from brackets to the corresponding monomials in the polynomial ring `R`
-- `point_labels::Vector`: point labels for each point
-"""
+     BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
+ 
+ Bracket algebra with coefficients of type `T`.
+ 
+ # Fields
+ - `d::Int`: dimension of the underlying projective space P^`d`
+ - `n::Int`: number of points considered
+ - `R::MPolyRing{T}`: AbstractAlgebra multivariate polynomial ring representing the elements of the bracket algebra (for internal use)
+ - `point_ordering::Vector{Int}`: ordering of the `n` point indices, that induces the tableaux order. `point_ordering[1] < point_ordering[2] < ... < point_ordering[n]`. 
+ - `variables::Bijection{Vector{Int},<:MPolyRingElem{T}}`: bijection from brackets to the corresponding monomials in the polynomial ring `R`
+ - `point_labels::Vector`: point labels for each point
+ """
 mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     d::Int # dimension of the underlying projective space $\mathbb{P}^d$
     n::Int # number of points considered
@@ -46,54 +46,60 @@ mutable struct BracketAlgebra{T<:RingElement} <: AbstractBracketAlgebra{T}
     point_ordering::Vector{Int} # ordering of the n pointsjulia, that induces the tableaux order. point_ordering[1] < point_ordering[2] < ... < point_ordering[n]. See Sturmfels 2008 p.81
     variables::Bijection{Vector{Int},<:MPolyRingElem{T}}
     point_labels::Vector  # point labels for each point
+end
+
+"""
+    BracketAlgebra(n::Integer, d::Integer, point_ordering::AbstractVector{<:Integer}=collect(1:n), coefficient_ring::AbstractAlgebra.Ring=AbstractAlgebra.ZZ; point_labels::AbstractVector=collect(1:n))
 
 
-    """
-        BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::AbstractVector=collect(1:n))
+    BracketAlgebra(n::Integer, d::Integer, point_ordering::AbstractVector{<:Integer}=collect(1:n), T::Type=Int; point_labels::AbstractVector=collect(1:n))
 
-    Construct a bracket algebra over the projective space P^d on n points with the given point ordering and point labels. If point_labels is a vector of integers, it is expected to be equal to `collect(1:n)`.
+Construct a bracket algebra over the projective space P^d on n points with the given point ordering and point labels. If point_labels is a vector of integers, it is expected to be equal to `collect(1:n)`. `coefficient_ring` is the ring, which contains the coefficients of the bracket algebra.
 
-    # Examples
-    ```jldoctest
-    julia> B = BracketAlgebra(4, 2, [1,2,3,4], point_labels = ["a","b","c","d"])
-    Bracket algebra over P^2 on 4 points with point ordering a < b < c < d.
-    ```
+# Examples
+```jldoctest
+julia> B = BracketAlgebra(4, 2, [1,2,3,4], point_labels = ["a","b","c","d"])
+Bracket algebra over P^2 on 4 points with point ordering a < b < c < d and coefficient ring Integers.
+```
 
-    ```jldoctest
-    B = BracketAlgebra(4, 2, [2,1,3,4], point_labels = ["a","b","c","d"])
-    Bracket algebra over P^2 on 4 points with point ordering b < a < c < d.
-    ```
-    """
-    function BracketAlgebra(n, d, point_ordering=collect(1:n), T::Type=Int; point_labels::AbstractVector=collect(1:n))
-        if sort(point_ordering) != collect(1:n)
-            error("ordering needs to order the points 1:$n, but got $point_ordering")
-        end
-        if length(point_labels) != n
-            error("point_labels must be of length $n")
-        end
-        # Add check for point_labels when it's a Vector of Integers
-        if eltype(point_labels) <: Integer && point_labels != collect(1:n)
-            error("When point_labels is a Vector of Integers, it must equal collect(1:n)")
-        end
+```jldoctest
+julia> B = BracketAlgebra(4, 2, [2,1,3,4], point_labels = ["a","b","c","d"])
+Bracket algebra over P^2 on 4 points with point ordering b < a < c < d and coefficient ring Integers.
+```
 
-        S = parent_type(T)
-        brackets = sort(sort.(collect(combinations(1:n, d + 1)), lt=_lt(point_ordering)), lt=_lt(point_ordering)) # brackets are in the form [a,b,c,...] with a < b < c according to point_ordering. They are sorted in decreasing order wrt the tableaux order extrapolated from point_ordering.
-        vars = AbstractAlgebra.variable_names("x#" => brackets)
-
-        # the monomial ordering is extrapolated from vars[1] > vars[2] > vars[3]... As the brackets are sorted in increasing order wrt the tableaux order, the variables need to be reversed.
-        R, x = polynomial_ring(S(), reverse(vars), internal_ordering=:degrevlex)
-        reverse!(x) # now x is in the same order as brackets
-
-        variables = Bijection{Vector{Int},typeof(x[1])}()
-
-        for (i, bracket) in enumerate(brackets)
-            variables[bracket] = x[i]
-        end
-
-        # ordering = Groebner.DegRevLex(x)
-
-        return new{elem_type(S)}(d, n, R, point_ordering, variables, point_labels)
+```jldoctest
+julia> B = BracketAlgebra(4, 2, [2,1,3,4], AbstractAlgebra.GF(13), point_labels = ["a","b","c","d"])
+Bracket algebra over P^2 on 4 points with point ordering b < a < c < d and coefficient ring Finite field F_13.
+```
+"""
+function BracketAlgebra(n::Integer, d::Integer, point_ordering::AbstractVector{<:Integer}=collect(1:n), coefficient_ring::AbstractAlgebra.Ring=AbstractAlgebra.ZZ; point_labels::AbstractVector=collect(1:n))
+    if sort(point_ordering) != collect(1:n)
+        error("ordering needs to order the points 1:$n, but got $point_ordering")
     end
+    if length(point_labels) != n
+        error("point_labels must be of length $n")
+    end
+    # Add check for point_labels when it's a Vector of Integers
+    if eltype(point_labels) <: Integer && point_labels != collect(1:n)
+        error("When point_labels is a Vector of Integers, it must equal collect(1:n)")
+    end
+
+    brackets = sort(sort.(collect(combinations(1:n, d + 1)), lt=_lt(point_ordering)), lt=_lt(point_ordering)) # brackets are in the form [a,b,c,...] with a < b < c according to point_ordering. They are sorted in decreasing order wrt the tableaux order extrapolated from point_ordering.
+    vars = AbstractAlgebra.variable_names("x#" => brackets)
+
+    # the monomial ordering is extrapolated from vars[1] > vars[2] > vars[3]... As the brackets are sorted in increasing order wrt the tableaux order, the variables need to be reversed.
+    R, x = polynomial_ring(coefficient_ring, reverse(vars), internal_ordering=:degrevlex)
+    reverse!(x) # now x is in the same order as brackets
+
+    variables = Bijection{Vector{Int},typeof(x[1])}()
+
+    for (i, bracket) in enumerate(brackets)
+        variables[bracket] = x[i]
+    end
+
+    # ordering = Groebner.DegRevLex(x)
+
+    return BracketAlgebra{elem_type(coefficient_ring)}(d, n, R, point_ordering, variables, point_labels)
 end
 
 """
@@ -104,7 +110,7 @@ Return the generators of the bracket algebra `B` as elements of `B`. The list is
 # Examples
 ```jldoctest
 julia> gens(BracketAlgebra(4,2,[1,2,3,4]))
-4-element Vector{BracketAlgebras.BracketAlgebraElem{Int64}}:
+4-element Vector{BracketAlgebraElem{BigInt}}:
  [2, 3, 4]
  [1, 3, 4]
  [1, 2, 4]
@@ -113,7 +119,7 @@ julia> gens(BracketAlgebra(4,2,[1,2,3,4]))
 
 ```jldoctest
 julia> gens(BracketAlgebra(4,2,[2,1,3,4]))
-4-element Vector{BracketAlgebras.BracketAlgebraElem{Int64}}:
+4-element Vector{BracketAlgebraElem{BigInt}}:
  [1, 3, 4]
  [2, 3, 4]
  [2, 1, 4]
@@ -138,12 +144,12 @@ Update the point labels of the bracket algebra `B` and return the resulting brac
 # Examples
 ```jldoctest
 julia> point_labels!(BracketAlgebra(6,3), ["a", "b", "c", "d", "e", "f"])
-Bracket algebra over P^3 on 6 points with point ordering a < b < c < d < e < f.
+Bracket algebra over P^3 on 6 points with point ordering a < b < c < d < e < f and coefficient ring Integers.
 ```
 
 ```jldoctest
 julia> point_labels!(BracketAlgebra(6,3), [2,1,3,4,5,"a"])
-Bracket algebra over P^3 on 6 points with point ordering 2 < 1 < 3 < 4 < 5 < a.
+Bracket algebra over P^3 on 6 points with point ordering 2 < 1 < 3 < 4 < 5 < a and coefficient ring Integers.
 ```
 
 ```jldoctest
@@ -217,7 +223,7 @@ Warning: changing the point ordering will not change the representation of alrea
 # Examples
 ```jldoctest
 julia> point_ordering!(BracketAlgebra(6,3), [6,5,4,3,2,1])
-Bracket algebra over P^3 on 6 points with point ordering 6 < 5 < 4 < 3 < 2 < 1.
+Bracket algebra over P^3 on 6 points with point ordering 6 < 5 < 4 < 3 < 2 < 1 and coefficient ring Integers.
 ```
 """
 function point_ordering!(B::BracketAlgebra, point_ordering::AbstractVector{<:Integer}=collect(1:B.n))
@@ -243,17 +249,17 @@ function Base.show(io::IO, B::BracketAlgebra)
     for i in 2:n(B)
         ordering_str *= " < $(point_labels(B)[point_ordering(B)[i]])"
     end
-    print(io, "Bracket algebra over P^$(d(B)) on $(n(B)) points with point ordering $(ordering_str).")
+    print(io, "Bracket algebra over P^$(d(B)) on $(n(B)) points with point ordering $(ordering_str) and coefficient ring $(base_ring(B)).")
 end
 
 """
     BracketAlgebraElem{T<:Union{RingElem,Number}} <: AbstractBracketAlgebraElem{T}
 
-Element type for @BracketAlgebra with coefficients of type `T`.
+Element type for [`BracketAlgebra`](@ref) with coefficients of type `T`.
     
 # Fields
--`parent::BracketAlgebra{T}`: parent object of the bracket algebra element.
--`polynomial::MPolyRingElem{T}`: polynomial in `parent.R` that represents the element.
+- `parent::BracketAlgebra{T}`: parent object of the bracket algebra element.
+- `polynomial::MPolyRingElem{T}`: polynomial in `parent.R` that represents the element.
 """
 mutable struct BracketAlgebraElem{T<:Union{RingElem,Number}} <: AbstractBracketAlgebraElem{T}
     parent::BracketAlgebra{T}
@@ -286,7 +292,7 @@ function Base.show(io::IO, b::BracketAlgebraElem)
         end
 
         if !(coefficient in [one(base_ring(b)), -one(base_ring(b))])
-            str = str * "$coefficient"
+            str = str * "$(abs(coefficient))"
         end
 
         for (j, val) in enumerate(exp)
