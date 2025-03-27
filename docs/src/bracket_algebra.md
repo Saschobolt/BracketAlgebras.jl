@@ -187,6 +187,62 @@ julia> parent(b) === B
 true
 ```
 
+### Arithmetic operations for bracket algebra elements
+For bracket algebra elements the following arithmetic operations are implemented:
+```jldoctest
+julia> B = BracketAlgebra(4,2)
+Bracket algebra over P^2 on 4 points with point ordering 1 < 2 < 3 < 4 and coefficient ring Integers.
+
+julia> b1 = B([1,2,3]) * B([1,2,4]) + B([2,3,4])
+[1, 2, 4][1, 2, 3] + [2, 3, 4]
+
+julia> b2 = B([1,2,3]) * B([2,3,4])
+[2, 3, 4][1, 2, 3]
+
+julia> 2*b1 # multiplication with integers
+2[1, 2, 4][1, 2, 3] + 2[2, 3, 4]
+
+julia> -b1 # additive inverse
+ - [1, 2, 4][1, 2, 3] - [2, 3, 4]
+
+julia> b1^3 # raising bracket algebra expressions to an integer power
+[1, 2, 4]^3[1, 2, 3]^3 + 3[2, 3, 4][1, 2, 4]^2[1, 2, 3]^2 + 3[2, 3, 4]^2[1, 2, 4][1, 2, 3] + [2, 3, 4]^3
+
+julia> b1+b2 # addition of bracket algebra elements
+[2, 3, 4][1, 2, 3] + [1, 2, 4][1, 2, 3] + [2, 3, 4]
+
+julia> b1-b2 # subtraction of bracket algebra elements
+ - [2, 3, 4][1, 2, 3] + [1, 2, 4][1, 2, 3] + [2, 3, 4]
+
+julia> b1*b2 # multiplication of bracket algebra elements
+[2, 3, 4][1, 2, 4][1, 2, 3]^2 + [2, 3, 4]^2[1, 2, 3]
+```
+
+We can also compare representatives of bracket algebra monomials with regards to the tableuaux ordering.
+
+```jldoctest
+julia> B = BracketAlgebra(4,2)
+Bracket algebra over P^2 on 4 points with point ordering 1 < 2 < 3 < 4 and coefficient ring Integers.
+
+julia> b1 = B([1,2,3]) * B([2,3,4])
+[2, 3, 4][1, 2, 3]
+
+julia> b2 = B([1,2,3]) * B([1,2,4])
+[1, 2, 4][1, 2, 3]
+
+julia> b3 = B([2,3,4])
+[2, 3, 4]
+
+julia> b1 < b2
+false
+
+julia> b1 > b2
+true
+
+julia> b1 > b3
+true
+```
+
 ### Bracket algebra elements as polynomials
 We can query information about the chosen representative in ``\mathbb{C}[\Lambda]`` of a bracket algebra element as a polynomial. These are implemented as extensions of functions in the `AbstractAlgebra.jl` package.
 ```jldoctest
