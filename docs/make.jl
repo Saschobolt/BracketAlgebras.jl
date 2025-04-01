@@ -21,5 +21,4 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/Saschobolt/BracketAlgebras.jl",
-    devbranch="master",
 )
