@@ -1,4 +1,5 @@
 using BracketAlgebras
+using AbstractAlgebra
 using Documenter
 
 DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras, AbstractAlgebra); recursive=true)
