@@ -73,10 +73,8 @@ point_ordering!
 ```
 !!! warning 
     Changing the point ordering of an existing [`BracketAlgebra`](@ref) will not update the point ordering in the internal representation of the already constructed [`BracketAlgebraElem`](@ref), even though they will have the updated bracket algebra as a parent object.
-The generators of a bracket algebra, i.e. the brackets in the bracket algebra, can be computed by 
-```@docs
-AbstractAlgebra.gens(::BracketAlgebra)
-```
+The generators of a bracket algebra, i.e. the brackets in the bracket algebra, can be computed by `AbstractAlgebra.gens`. 
+
 ```jldoctest
 julia> gens(BracketAlgebra(4,2))
 4-element Vector{BracketAlgebraElem{BigInt}}:
@@ -84,6 +82,13 @@ julia> gens(BracketAlgebra(4,2))
  [1, 3, 4]
  [1, 2, 4]
  [1, 2, 3]
+
+julia> gens(BracketAlgebra(4,2,[2,1,3,4]))
+4-element Vector{BracketAlgebraElem{BigInt}}:
+ [1, 3, 4]
+ [2, 3, 4]
+ [2, 1, 4]
+ [2, 1, 3]
 ```
 To change the point labels of an existin bracket algebra call
 ```@docs

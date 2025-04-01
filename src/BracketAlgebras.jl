@@ -102,30 +102,31 @@ function BracketAlgebra(n::Integer, d::Integer, point_ordering::AbstractVector{<
     return BracketAlgebra{elem_type(coefficient_ring)}(d, n, R, point_ordering, variables, point_labels)
 end
 
-"""
-    gens(B::BracketAlgebra)
+# extension of AbstractAlgebra.gens
+# """
+#     gens(B::BracketAlgebra)
 
-Return the generators of the bracket algebra `B` as elements of `B`. The list is sorted decreasing wrt the tableaux order and is thus consistent with the ordering of the variables in the polynomial ring `B.R`.
+# Return the generators of the bracket algebra `B` as elements of `B`. The list is sorted decreasing wrt the tableaux order and is thus consistent with the ordering of the variables in the polynomial ring `B.R`.
 
-# Examples
-```jldoctest
-julia> gens(BracketAlgebra(4,2,[1,2,3,4]))
-4-element Vector{BracketAlgebraElem{BigInt}}:
- [2, 3, 4]
- [1, 3, 4]
- [1, 2, 4]
- [1, 2, 3]
-```
+# # Examples
+# ```jldoctest
+# julia> gens(BracketAlgebra(4,2,[1,2,3,4]))
+# 4-element Vector{BracketAlgebraElem{BigInt}}:
+#  [2, 3, 4]
+#  [1, 3, 4]
+#  [1, 2, 4]
+#  [1, 2, 3]
+# ```
 
-```jldoctest
-julia> gens(BracketAlgebra(4,2,[2,1,3,4]))
-4-element Vector{BracketAlgebraElem{BigInt}}:
- [1, 3, 4]
- [2, 3, 4]
- [2, 1, 4]
- [2, 1, 3]
-```
-"""
+# ```jldoctest
+# julia> gens(BracketAlgebra(4,2,[2,1,3,4]))
+# 4-element Vector{BracketAlgebraElem{BigInt}}:
+#  [1, 3, 4]
+#  [2, 3, 4]
+#  [2, 1, 4]
+#  [2, 1, 3]
+# ```
+# """
 gens(B::BracketAlgebra) = [B(B.variables(x)) for x in gens(B.R)]
 
 
