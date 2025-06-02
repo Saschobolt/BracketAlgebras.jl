@@ -1,4 +1,5 @@
 using BracketAlgebras
+using AbstractAlgebra
 using Documenter
 
 DocMeta.setdocmeta!(BracketAlgebras, :DocTestSetup, :(using BracketAlgebras, AbstractAlgebra); recursive=true)
@@ -20,5 +21,4 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/Saschobolt/BracketAlgebras.jl",
-    devbranch="master",
 )

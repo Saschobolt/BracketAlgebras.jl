@@ -11,7 +11,7 @@ mutable struct Tabloid
     matrix::Matrix{Int}
     ordering::Vector{Int}
 
-    """
+    @doc """
     Tabloid(matrix::AbstractMatrix{<:Integer}, ordering::AbstractVector{<:Integer}=collect(1:maximum(matrix)))
 
     Return the tabloid whose rows correspond to the rows of matrix with the given ordering. The entries of the rows are sorted wrt the ordering and then the rows are ordered lexicographically (tableaux order).
@@ -158,6 +158,7 @@ julia> straightening_sizyge(α, β, γ, B)
 """
 function straightening_sizyge(α::Vector{<:Integer}, β::Vector{<:Integer}, γ::Vector{<:Integer}, B::BracketAlgebra)
     s = length(α) + 1
+    @assert s <= d(B) + 1 "α needs to have length less than or equal to ($(d(B) + 1)), but got $(s-1)."
     @assert length(β) == d(B) + 2 "β needs to have length d + 2 ($(d(B) + 2)), but got $(length(β))."
     @assert length(γ) == d(B) + 1 - s "γ needs to have length d - length(α) ($(d(B) - length(α))), but got $(length(γ))."
 
